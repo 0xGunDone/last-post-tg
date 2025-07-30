@@ -6,25 +6,25 @@
   <style>
     body {
       margin: 0;
-      padding: 0;
       background-color: #000000;
-      font-family: sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
     }
-    #tg-last-post {
-      max-width: 500px;
+    iframe {
       width: 100%;
+      max-width: 500px;
+      height: 500px;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div id="tg-last-post">Загрузка поста…</div>
+  <div id="tg-wrapper">Загрузка…</div>
 
   <script>
-    (async function showLastTelegramPost() {
+    (async function () {
       try {
         const proxy = 'https://corsproxy.io/?';
         const rss = 'https://rss.app/feeds/eG7nNgJpzXVxEGVh.xml';
@@ -33,28 +33,21 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(xml, 'text/xml');
         const item = doc.querySelector('item');
-        if (item) {
-          const link = item.querySelector('link')?.textContent;
-          const match = link?.match(/leningradtver\/(\d+)/);
-          const postId = match ? match[1] : null;
-          if (postId) {
-            const script = document.createElement('script');
-            script.async = true;
-            script.src = "https://telegram.org/js/telegram-widget.js?22";
-            script.setAttribute("data-telegram-post", `leningradtver/${postId}`);
-            script.setAttribute("data-width", "100%");
-            script.setAttribute("data-dark", "true"); // ← Тёмная тема
-            document.getElementById('tg-last-post').innerHTML = '';
-            document.getElementById('tg-last-post').appendChild(script);
-          } else {
-            document.getElementById('tg-last-post').innerText = 'Не удалось найти ID поста.';
-          }
+        const link = item.querySelector('link')?.textContent;
+        const match = link?.match(/leningradtver\/(\d+)/);
+        const postId = match ? match[1] : null;
+        if (postId) {
+          const iframe = document.createElement('iframe');
+          iframe.src = `https://t.me/leningradtver/${postId}?embed=1&dark=1`;
+          iframe.allowTransparency = true;
+          document.getElementById('tg-wrapper').innerHTML = '';
+          document.getElementById('tg-wrapper').appendChild(iframe);
         } else {
-          document.getElementById('tg-last-post').innerText = 'Нет постов в RSS.';
+          document.getElementById('tg-wrapper').innerText = 'Не удалось получить ID поста.';
         }
       } catch (e) {
-        console.error('Ошибка:', e);
-        document.getElementById('tg-last-post').innerText = 'Ошибка загрузки поста.';
+        console.error(e);
+        document.getElementById('tg-wrapper').innerText = 'Ошибка загрузки поста.';
       }
     })();
   </script>
